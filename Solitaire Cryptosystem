@@ -1,0 +1,248 @@
+## Solitaire Encryption System
+## Implementation by Ben Vander
+## Cryptosystem by Bruce Schneier at https://www.schneier.com/solitaire.html
+## July 18 2014
+
+## Written in R
+ 
+
+
+
+##### Encrypting and Decrypting Text #####
+
+process.text <- function(x) {
+	x <- strsplit(x,NULL)[[1]]
+	remove <- c("." , "," , " " , "\'" , "(",")","!","?")
+	x <- x[! x %in% remove]
+	x <- toupper(x)
+	return(x)
+}
+
+encrypt <- function(cleartext,keystream) {
+	clearnums <- match(process.text(cleartext),LETTERS)
+	ciphernums <- (clearnums+keystream) %% 26
+	ciphernums[which(ciphernums==0)] <- 26
+	ciphertext <- LETTERS[ciphernums]
+	return(paste(ciphertext,sep="",collapse=""))
+}
+
+decrypt <- function(ciphertext,keystream) {
+	ciphernums <- match(process.text(ciphertext),LETTERS)
+	clearnums <- (ciphernums-keystream)
+	clearnums[which(clearnums <0)] <- clearnums[which(clearnums <0)] + 26
+	cleartext <- LETTERS[clearnums]
+	return(cleartext)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+###### Generating Keystream #####
+
+keystreamer <- function(deck,length){
+
+padded.length <- length*2
+keystream <- rep(NA,padded.length)
+
+for (i in 1:padded.length) {
+
+## Move Jokers
+
+# Move Joker A down one
+if (which(deck==53)==54) {
+	deck <- c(deck[1],deck[which(deck==53)], deck[2:(which(deck==53)-1)])
+	} else if (which(deck==53)==1) {
+		deck <- c(deck[(which(deck==53)+1)],deck[(which(deck==53))],deck[(which(deck==53)+2):length(deck)])
+	} else if (which(deck==53)==53) {
+		deck <- c(deck[1:(which(deck==53)-1)],deck[(which(deck==53)+1)],deck[(which(deck==53))])
+	} else deck <- c(deck[1:(which(deck==53)-1)],deck[(which(deck==53)+1)],deck[(which(deck==53))],deck[(which(deck==53)+2):length(deck)])
+
+# Move Joker B down two
+
+if (which(deck==54)==54) {
+	deck <- c(deck[1],deck[which(deck==54)], deck[2:(which(deck==54)-1)])
+	} else if (which(deck==54)==1) {
+		deck <- c(deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+	} else if (which(deck==54)==53) {
+		deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))])
+	} else deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+
+if (which(deck==54)==54) {
+	deck <- c(deck[1],deck[which(deck==54)], deck[2:(which(deck==54)-1)])
+	} else if (which(deck==54)==1) {
+		deck <- c(deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+	} else if (which(deck==54)==53) {
+		deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))])
+	} else deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+
+## Perform triple cut
+
+joker.pos <- sort(c(which(deck==53),which(deck==54)))
+
+if (joker.pos[1] == 1) {
+	if (joker.pos[2] == 54) {
+		deck <- deck
+	} else deck <- c(deck[(joker.pos[2]+1):length(deck)],deck[joker.pos[1]:joker.pos[2]])
+} else if (joker.pos[2] == 54) {
+	deck <- c(deck[joker.pos[1]:joker.pos[2]],deck[1:(joker.pos[1]-1)])
+} else deck <- c(deck[(joker.pos[2]+1):length(deck)],deck[joker.pos[1]:joker.pos[2]],deck[1:(joker.pos[1]-1)])
+
+
+## Perform count cut
+
+cut.pos <- min(deck[length(deck)],53)
+if (cut.pos == 53) {deck <- deck} else {deck <- c(deck[(cut.pos+1):53],deck[1:cut.pos],deck[54])}
+
+
+## Get output card
+
+deck[deck[1]+1]
+keystream[i] <- (deck[min(deck[1],53)+1])
+
+}
+
+keystream <- keystream[! keystream %in% c(53,54)]
+keystream <- keystream %% 26
+keystream[which(keystream==0)] <- 26
+keystream <- keystream[1:length]
+return(keystream)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+###### Keying a deck ######
+
+standard.deck <- 1:54
+names(standard.deck) <- c("A Clubs","2 Clubs","3 Clubs","4 Clubs","5 Clubs","6 Clubs","7 Clubs","8 Clubs","9 Clubs","10 Clubs","J Clubs","Q Clubs","K Clubs","A Diamonds","2 Diamonds","3 Diamonds","4 Diamonds","5 Diamonds","6 Diamonds","7 Diamonds","8 Diamonds","9 Diamonds","10 Diamonds","J Diamonds","Q Diamonds","K Diamonds","A Hearts","2 Hearts","3 Hearts","4 Hearts","5 Hearts","6 Hearts","7 Hearts","8 Hearts","9 Hearts","10 Hearts","J Hearts","Q Hearts","K Hearts","A Spades","2 Spades","3 Spades","4 Spades","5 Spades","6 Spades","7 Spades","8 Spades","9 Spades","10 Spades","J Spades","Q Spades","K Spades","Joker A","Joker B")
+
+key.deck <- function(deck,passphrase) {
+
+passnums <- match(process.text(passphrase),LETTERS)
+
+for (i in 1:length(passnums)) {
+
+## Move Jokers
+
+# Move Joker A down one
+if (which(deck==53)==54) {
+	deck <- c(deck[1],deck[which(deck==53)], deck[2:(which(deck==53)-1)])
+	} else if (which(deck==53)==1) {
+		deck <- c(deck[(which(deck==53)+1)],deck[(which(deck==53))],deck[(which(deck==53)+2):length(deck)])
+	} else if (which(deck==53)==53) {
+		deck <- c(deck[1:(which(deck==53)-1)],deck[(which(deck==53)+1)],deck[(which(deck==53))])
+	} else deck <- c(deck[1:(which(deck==53)-1)],deck[(which(deck==53)+1)],deck[(which(deck==53))],deck[(which(deck==53)+2):length(deck)])
+
+# Move Joker B down two
+
+if (which(deck==54)==54) {
+	deck <- c(deck[1],deck[which(deck==54)], deck[2:(which(deck==54)-1)])
+	} else if (which(deck==54)==1) {
+		deck <- c(deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+	} else if (which(deck==54)==53) {
+		deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))])
+	} else deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+
+if (which(deck==54)==54) {
+	deck <- c(deck[1],deck[which(deck==54)], deck[2:(which(deck==54)-1)])
+	} else if (which(deck==54)==1) {
+		deck <- c(deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+	} else if (which(deck==54)==53) {
+		deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))])
+	} else deck <- c(deck[1:(which(deck==54)-1)],deck[(which(deck==54)+1)],deck[(which(deck==54))],deck[(which(deck==54)+2):length(deck)])
+
+## Perform triple cut
+
+joker.pos <- sort(c(which(deck==53),which(deck==54)))
+
+if (joker.pos[1] == 1) {
+	if (joker.pos[2] == 54) {
+		deck <- deck
+	} else deck <- c(deck[(joker.pos[2]+1):length(deck)],deck[joker.pos[1]:joker.pos[2]])
+} else if (joker.pos[2] == 54) {
+	deck <- c(deck[joker.pos[1]:joker.pos[2]],deck[1:(joker.pos[1]-1)])
+} else deck <- c(deck[(joker.pos[2]+1):length(deck)],deck[joker.pos[1]:joker.pos[2]],deck[1:(joker.pos[1]-1)])
+
+
+## Perform count cut
+
+cut.pos <- min(deck[length(deck)],53)
+if (cut.pos == 53) {deck <- deck} else {deck <- c(deck[(cut.pos+1):53],deck[1:cut.pos],deck[54])}
+
+## Perform count cut for key
+
+cut.pos <- passnums[i]
+deck <- c(deck[(cut.pos+1):53],deck[1:cut.pos],deck[54])
+
+}
+return(deck)
+}
+
+
+
+
+
+
+##### TESTS #####
+
+
+
+cleartext <- "AAAAA AAAAA"
+keystream <- keystreamer(standard.deck,10)
+
+ciphertext <- encrypt(cleartext,keystream)
+ciphertext
+decrypt(ciphertext,keystream)
+
+
+
+cleartext <- "AAAAA AAAAA AAAAA"
+passphrase <- "FOO,"
+deck <- key.deck(standard.deck,passphrase)
+
+keystream <- keystreamer(deck,length(process.text(cleartext)))
+
+ciphertext <- encrypt(cleartext,keystream)
+ciphertext
+decrypt(ciphertext,keystream)
+
+
+cleartext <- "Solitaire"
+passphrase <- "CRYPTONOMICON"
+deck <- key.deck(standard.deck,passphrase)
+
+keystream <- keystreamer(deck,length(process.text(cleartext)))
+
+ciphertext <- encrypt(cleartext,keystream)
+ciphertext
+decrypt(ciphertext,keystream)
+
+
+cleartext <- "This is a secret message."
+passphrase <- "My voice is my password."
+deck <- key.deck(standard.deck,passphrase)
+
+keystream <- keystreamer(deck,length(process.text(cleartext)))
+
+ciphertext <- encrypt(cleartext,keystream)
+ciphertext
+decrypt(ciphertext,keystream)
+
+
