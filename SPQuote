@@ -222,8 +222,6 @@ color: #7e7e7e;
 <div id="stock_quote">
 
 <h2>What's $SP worth right now?</h2>
-<h1>Works?</h1>
-
 <h1>quote['SP']['Last']</h1>
 
 <p style="font-size: 12px;">(price delayed)</p>
