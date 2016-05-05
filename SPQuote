@@ -208,10 +208,9 @@ color: #7e7e7e;
 </style>
 
 </head>
+ 
+ <script src="http://feeds.financialcontent.com/*****/JSQuote?Ticker=SP"></script>
 
-
-<script src="http://feeds.financialcontent.com/account_name/JSQuote?Ticker=CSCO">
- </script>
 
 
 <body>
@@ -224,9 +223,15 @@ color: #7e7e7e;
 
 <h2>What's $SP worth right now?</h2>
 
-<h1 id="quote"> quote[‘SP’][‘Last’] </h1>
-
-<p id="change">Change: <span class="change"> quote[‘SP’][‘Change’] quote[‘SP’][‘ChangePercent’] </span></p>
+ <script>
+  function updateQuotes(data) {
+   for (ticker in quote) {
+    var symbol = quote[ticker];
+    document.write('<div>Price of ' + ticker + ' is ' + symbol['Last'] + '</div>');
+   }
+  }
+ </script>
+ 
 
 <p style="font-size: 12px;">(price delayed)</p>
 
