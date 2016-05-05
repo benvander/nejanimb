@@ -222,6 +222,7 @@ color: #7e7e7e;
 <div id="stock_quote">
 
 <h2>What's $SP worth right now?</h2>
+<h1> Refreshed </h1>
 
  <script>
   function updateQuotes(data) {
